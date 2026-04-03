@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cycle Wheel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07080F;
+    --text: #EEE8F5;
+    --muted: #7A7295;
+    --accent: #C084FC;
+  }
+  html, body { width: 100%; background: var(--bg); color: var(--text);
+    font-family: 'Jost', sans-serif; font-weight: 300; overflow-x: hidden; }
+  body {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 24px 16px 36px;
+    background: radial-gradient(ellipse at 50% 0%, #160D2A 0%, #07080F 65%);
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    opacity: 0.5; pointer-events: none; z-index: 0;
+  }
+  .container {
+    position: relative; z-index: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 22px; width: 100%; max-width: 500px;
+  }
+  .title-block { text-align: center; }
+  .title-block h1 {
+    font-family: 'Cormorant Garamond', serif; font-weight: 300;
+    font-size: clamp(1.15rem, 4vw, 1.55rem); color: var(--text);
+    text-transform: uppercase; letter-spacing: 0.3em;
+  }
+  .title-block p { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.24em;
+    text-transform: uppercase; margin-top: 5px; }
+
+  .wheel-wrap {
+    position: relative; width: min(380px, 94vw); height: min(380px, 94vw);
+    filter: drop-shadow(0 0 50px rgba(120,70,200,0.15));
+  }
+  #wheel-svg { width: 100%; height: 100%; overflow: visible; }
+
+  .centre {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none; width: 100px;
+  }
+  .centre .day-num {
+    font-family: 'Cormorant Garamond', serif; font-weight: 300;
+    font-size: 3.6rem; line-height: 1; color: var(--text);
+  }
+  .centre .day-label { font-size: 0.55rem; letter-spacing: 0.26em; color: var(--muted);
+    text-transform: uppercase; margin-top: 2px; }
+  .centre .phase-name {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 0.82rem; color: var(--accent); margin-top: 7px; line-height: 1.25;
+  }
+
+  /* Cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; width: 100%; }
+  .card {
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.055);
+    border-radius: 12px; padding: 13px 15px; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--card-accent, var(--accent)); border-radius: 12px 12px 0 0; opacity: 0.9;
+  }
+  .card.full { grid-column: span 2; }
+  .card-label { font-size: 0.56rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 5px; }
+  .card-value { font-family: 'Cormorant Garamond', serif; font-size: 1.02rem;
+    font-weight: 400; color: var(--text); line-height: 1.3; }
+  .card-sub { font-size: 0.6rem; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+  .fast-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+  .fast-pill {
+    font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text); opacity: 0.65;
+  }
+  .fast-pill.recommended {
+    opacity: 1; border-color: var(--card-accent, var(--accent));
+    color: var(--card-accent, var(--accent)); background: rgba(255,255,255,0.04);
+  }
+
+  /* Legend */
+  .legend-wrap { width: 100%; display: flex; flex-direction: column; gap: 7px; }
+  .legend-section-label { font-size: 0.54rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); text-align: center; }
+  .legend-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.57rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .legend-swatch { width: 22px; height: 7px; border-radius: 3px; flex-shrink: 0; }
+
+  /* Date input */
+  .date-row {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.065);
+    border-radius: 10px; padding: 10px 14px;
+  }
+  .date-row label { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap; }
+  .date-row input[type="date"] {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: 'Jost', sans-serif; font-size: 0.78rem;
+    font-weight: 300; cursor: pointer; color-scheme: dark;
+  }
+  .date-row input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6) sepia(1) hue-rotate(230deg); cursor: pointer;
+  }
+
+  /* URL row */
+  .url-row {
+    width: 100%; background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 14px;
+  }
+  .url-label { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px; }
+  .url-box { display: flex; gap: 8px; align-items: flex-start; }
+  #url-display { flex: 1; font-size: 0.6rem; color: var(--muted);
+    word-break: break-all; line-height: 1.45; }
+  .url-row button {
+    background: rgba(140,80,220,0.18); border: 1px solid rgba(140,80,220,0.3);
+    color: #C084FC; border-radius: 6px; padding: 5px 10px; font-size: 0.58rem;
+    letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; white-space: nowrap;
+    font-family: 'Jost', sans-serif; transition: background 0.2s; flex-shrink: 0;
+  }
+  .url-row button:hover { background: rgba(140,80,220,0.32); }
+
+  @keyframes pulseGlow {
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(192,132,252,0.4)); }
+    50%       { filter: drop-shadow(0 0 16px rgba(192,132,252,0.9)); }
+  }
+  .active-arc { animation: pulseGlow 2.8s ease-in-out infinite; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .container > * { animation: fadeUp 0.55s ease both; }
+  .container > *:nth-child(1) { animation-delay: 0.00s; }
+  .container > *:nth-child(2) { animation-delay: 0.08s; }
+  .container > *:nth-child(3) { animation-delay: 0.16s; }
+  .container > *:nth-child(4) { animation-delay: 0.22s; }
+  .container > *:nth-child(5) { animation-delay: 0.28s; }
+  .container > *:nth-child(6) { animation-delay: 0.33s; }
+  .container > *:nth-child(7) { animation-delay: 0.37s; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="title-block">
+    <h1>Cycle Wheel</h1>
+    <p>Menstrual phases &amp; fast like a girl</p>
+  </div>
+
+  <div class="wheel-wrap">
+    <svg id="wheel-svg" viewBox="-190 -190 380 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#180D30" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#07080F" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="0" cy="0" r="182" fill="url(#bg)" opacity="0.7"/>
+      <g id="g-phase"></g>
+      <g id="g-beginner"></g>
+      <g id="g-advanced"></g>
+      <g id="g-highlight"></g>
+      <g id="g-labels"></g>
+      <g id="g-markers"></g>
+    </svg>
+    <div class="centre">
+      <div class="day-num" id="day-num">1</div>
+      <div class="day-label">cycle day</div>
+      <div class="phase-name" id="phase-name">Menstrual</div>
+    </div>
+  </div>
+
+  <div class="legend-wrap">
+    <div class="legend-section-label">Phase (outer ring)</div>
+    <div class="legend-row" id="legend-phases"></div>
+    <div class="legend-section-label">Fasting — beginner (mid) &amp; advanced (inner)</div>
+    <div class="legend-row" id="legend-fast"></div>
+  </div>
+
+  <div class="cards">
+    <div class="card" id="card-phase">
+      <div class="card-label">Phase</div>
+      <div class="card-value" id="info-phase">—</div>
+      <div class="card-sub" id="info-phase-days">—</div>
+    </div>
+    <div class="card" id="card-energy">
+      <div class="card-label">Energy</div>
+      <div class="card-value" id="info-energy">—</div>
+      <div class="card-sub" id="info-energy-sub">—</div>
+    </div>
+    <div class="card full" id="card-fasting">
+      <div class="card-label">Fast Like a Girl — Fasting Windows</div>
+      <div class="card-value" id="info-fasting-title">—</div>
+      <div class="card-sub" id="info-fasting-sub">—</div>
+      <div class="fast-pills" id="fast-pills"></div>
+    </div>
+    <div class="card full" id="card-nutrition">
+      <div class="card-label">Nutrition Focus</div>
+      <div class="card-value" id="info-nutrition">—</div>
+      <div class="card-sub" id="info-nutrition-sub">—</div>
+    </div>
+  </div>
+
+  <div class="date-row">
+    <label>Day 1 date</label>
+    <input type="date" id="start-date" />
+  </div>
+
+  <div class="url-row">
+    <div class="url-label">Notion embed URL — copy &amp; paste into /embed block</div>
+    <div class="url-box">
+      <div id="url-display">—</div>
+      <button onclick="copyUrl()">Copy</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const CYCLE = 28;
+
+// Colour journey: hot pink → magenta → violet → indigo-blue
+const PHASES = [
+  {
+    name: 'Menstrual', startDay: 1, endDay: 5,
+    color: '#D0185A',        // deep hot-pink / rose
+    colorLight: '#E8347A',
+    begColor: '#B8154E',     // darker for beginner ring
+    advColor: '#991240',     // darkest for advanced ring
+    fastTitle: 'Gentle circadian fasting',
+    fastSub: 'Hormones at their lowest. Longer fasts can spike cortisol during bleed — keep it gentle.',
+    fastPills: [
+      { label: '13 hrs', note: 'beginner', rec: false },
+      { label: '13–15 hrs', note: 'recommended', rec: true },
+      { label: '15–17 hrs', note: 'only if well tolerated', rec: false },
+    ],
+    begLabel: '13–15 hrs', advLabel: '15–17 hrs',
+    energy: 'Rest & restore', energySub: 'Low, inward energy — honour slowness',
+    nutrition: 'Iron-rich, warming foods',
+    nutritionSub: 'Red meat, lentils, leafy greens, bone broth, dark chocolate',
+  },
+  {
+    name: 'Follicular', startDay: 6, endDay: 13,
+    color: '#9B20C0',        // vivid magenta-purple
+    colorLight: '#BA44DC',
+    begColor: '#861AA8',
+    advColor: '#6E1590',
+    fastTitle: 'Build & experiment',
+    fastSub: 'Rising oestrogen boosts insulin sensitivity. Great phase to push fasting windows further.',
+    fastPills: [
+      { label: '15–17 hrs', note: 'beginner–moderate', rec: true },
+      { label: '17–24 hrs', note: 'intermediate', rec: false },
+      { label: '24–72 hrs', note: 'advanced only', rec: false },
+    ],
+    begLabel: '15–17 hrs', advLabel: '17–72 hrs',
+    energy: 'Build & explore', energySub: 'Rising energy — ideal for new projects & learning',
+    nutrition: 'Light, fresh, high-protein',
+    nutritionSub: 'Eggs, fermented foods, flaxseed, avocado, sprouts',
+  },
+  {
+    name: 'Ovulatory', startDay: 14, endDay: 16,
+    color: '#5B3DBE',        // mid violet-indigo
+    colorLight: '#7B5DDE',
+    begColor: '#4D33A6',
+    advColor: '#3D2888',
+    fastTitle: 'Peak metabolic flexibility',
+    fastSub: 'LH surge gives peak energy. Up to 24 hrs is well tolerated by most women here.',
+    fastPills: [
+      { label: '15–17 hrs', note: 'moderate', rec: true },
+      { label: '17–24 hrs', note: 'advanced', rec: false },
+      { label: '24+ hrs', note: 'very advanced', rec: false },
+    ],
+    begLabel: '15–17 hrs', advLabel: '17–24 hrs',
+    energy: 'Connect & shine', energySub: 'Peak energy — socialise, collaborate, create',
+    nutrition: 'Anti-inflammatory, fibre-rich',
+    nutritionSub: 'Flaxseed, cruciferous veg, berries, quinoa, salmon',
+  },
+  {
+    name: 'Luteal', startDay: 17, endDay: 28,
+    color: '#2255B8',        // clear periwinkle-blue
+    colorLight: '#3A72D8',
+    begColor: '#1C49A0',
+    advColor: '#163C88',
+    fastTitle: 'Return to gentle fasting',
+    fastSub: 'Progesterone raises appetite & body temp. Honour hunger — longer fasts are counterproductive here.',
+    fastPills: [
+      { label: '13 hrs', note: 'recommended', rec: true },
+      { label: '13–15 hrs', note: 'if hunger allows', rec: false },
+      { label: '15–17 hrs', note: 'avoid late luteal', rec: false },
+    ],
+    begLabel: '13–15 hrs', advLabel: '13–17 hrs',
+    energy: 'Reflect & complete', energySub: 'Progesterone rising — wind down, finish tasks',
+    nutrition: 'Complex carbs, magnesium-rich',
+    nutritionSub: 'Sweet potato, oats, pumpkin seeds, dark chocolate, turkey',
+  },
+];
+
+function getPhase(day) {
+  return PHASES.find(p => day >= p.startDay && day <= p.endDay) || PHASES[3];
+}
+
+// ── SVG HELPERS ───────────────────────────────────────────────────────────────
+
+function polarXY(deg, r) {
+  const a = (deg - 90) * Math.PI / 180;
+  return { x: r * Math.cos(a), y: r * Math.sin(a) };
+}
+
+function arcPath(sd, ed, rOut, rIn) {
+  const s1 = polarXY(sd, rOut), e1 = polarXY(ed, rOut);
+  const s2 = polarXY(ed, rIn),  e2 = polarXY(sd, rIn);
+  const large = (ed - sd) > 180 ? 1 : 0;
+  const ex = (Math.abs(s2.x - e2.x) < 0.001 && Math.abs(s2.y - e2.y) < 0.001) ? e2.x + 0.001 : e2.x;
+  return `M${s1.x} ${s1.y} A${rOut} ${rOut} 0 ${large} 1 ${e1.x} ${e1.y} L${s2.x} ${s2.y} A${rIn} ${rIn} 0 ${large} 0 ${ex} ${e2.y} Z`;
+}
+
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
+function arcText(group, text, midDeg, r, fill, size, spacing = 1) {
+  const p = polarXY(midDeg, r);
+  const t = svgEl('text', {
+    x: p.x, y: p.y,
+    'text-anchor': 'middle',
+    'dominant-baseline': 'middle',
+    fill, 'font-family': "'Jost', sans-serif",
+    'font-size': size, 'letter-spacing': spacing,
+    'font-weight': '300',
+    transform: `rotate(${midDeg}, ${p.x}, ${p.y})`,
+  });
+  t.textContent = text;
+  group.appendChild(t);
+  return t;
+}
+
+// ── RING DIMENSIONS ───────────────────────────────────────────────────────────
+//  Outside → in:
+//  Phase labels   (outer text only)
+//  Phase ring     R 174 → 150   w=24
+//  gap            3px
+//  Beginner ring  R 147 → 127   w=20
+//  gap            3px
+//  Advanced ring  R 124 → 104   w=20
+//  gap            3px
+//  Tick / day num R 101 → 97 / 90
+//  Centre hole    r ~82
+
+const PR_O = 174, PR_I = 150;   // phase
+const BR_O = 147, BR_I = 127;   // beginner fasting
+const AR_O = 124, AR_I = 104;   // advanced fasting
+const TICK_O = 101, TICK_I = 96;
+const NUM_R = 90;
+const GAP = 1.5; // degrees between segments
+
+// ── DRAW WHEEL ────────────────────────────────────────────────────────────────
+
+function drawWheel(currentDay) {
+  const gP  = document.getElementById('g-phase');
+  const gB  = document.getElementById('g-beginner');
+  const gA  = document.getElementById('g-advanced');
+  const gH  = document.getElementById('g-highlight');
+  const gL  = document.getElementById('g-labels');
+  const gM  = document.getElementById('g-markers');
+  [gP, gB, gA, gH, gL, gM].forEach(g => g.innerHTML = '');
+
+  const dpd = 360 / CYCLE;
+
+  PHASES.forEach(phase => {
+    const sd  = (phase.startDay - 1) * dpd + GAP / 2;
+    const ed  = phase.endDay * dpd - GAP / 2;
+    const mid = (sd + ed) / 2;
+    const span = ed - sd;
+
+    // ── Phase ring
+    gP.appendChild(svgEl('path', { d: arcPath(sd, ed, PR_O, PR_I), fill: phase.color, opacity: '0.85' }));
+
+    // ── Beginner fasting ring
+    gB.appendChild(svgEl('path', { d: arcPath(sd, ed, BR_O, BR_I), fill: phase.begColor, opacity: '0.8' }));
+
+    // ── Advanced fasting ring
+    gA.appendChild(svgEl('path', { d: arcPath(sd, ed, AR_O, AR_I), fill: phase.advColor, opacity: '0.75' }));
+
+    // ── Phase name (outside)
+    if (span > 16) {
+      arcText(gL, phase.name.toUpperCase(), mid,
+        PR_O + 11, phase.colorLight, span > 45 ? '7' : '6.2', 1.8);
+    }
+
+    // ── Fasting hour labels on the rings
+    const bMid = (BR_O + BR_I) / 2;
+    const aMid = (AR_O + AR_I) / 2;
+    const small = span < 22;
+
+    arcText(gL, phase.begLabel, mid, bMid,
+      'rgba(240,225,255,0.88)', small ? '5' : '6', 0.6);
+    arcText(gL, phase.advLabel, mid, aMid,
+      'rgba(210,200,255,0.82)', small ? '4.8' : '5.8', 0.6);
+  });
+
+  // ── Ring divider circles
+  [[PR_I + 1.5, 0.07], [BR_I + 1.5, 0.06], [AR_I + 1.5, 0.05]].forEach(([r, op]) => {
+    gM.appendChild(svgEl('circle', {
+      cx: 0, cy: 0, r,
+      fill: 'none', stroke: `rgba(200,180,255,${op})`, 'stroke-width': '0.6',
+    }));
+  });
+
+  // ── Small ring key labels (reading from inside the rings at top)
+  [
+    { r: PR_I - 9,  text: 'PHASE',    col: 'rgba(210,190,240,0.3)' },
+    { r: BR_I - 8,  text: 'BEGINNER', col: 'rgba(190,170,230,0.28)' },
+    { r: AR_I - 8,  text: 'ADVANCED', col: 'rgba(170,155,215,0.26)' },
+  ].forEach(({ r, text, col }) => {
+    const t = svgEl('text', {
+      x: 0, y: -r, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      fill: col, 'font-family': "'Jost', sans-serif", 'font-size': '4.5', 'letter-spacing': '1.2',
+    });
+    t.textContent = text;
+    gM.appendChild(t);
+  });
+
+  // ── Day tick marks + numbers
+  for (let d = 1; d <= CYCLE; d++) {
+    const deg = (d - 1) * dpd;
+    const major = (d === 1 || d % 7 === 1);
+    const p1 = polarXY(deg, TICK_O), p2 = polarXY(deg, TICK_I - (major ? 3 : 0));
+    gM.appendChild(svgEl('line', {
+      x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+      stroke: `rgba(220,205,245,${major ? 0.28 : 0.12})`,
+      'stroke-width': major ? '1' : '0.5',
+    }));
+    if (major) {
+      const lp = polarXY(deg, NUM_R);
+      const t = svgEl('text', {
+        x: lp.x, y: lp.y, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+        fill: 'rgba(155,140,185,0.5)', 'font-size': '5.8', 'font-family': "'Jost', sans-serif",
+      });
+      t.textContent = d;
+      gM.appendChild(t);
+    }
+  }
+
+  // ── Active day highlight
+  const cur = getPhase(currentDay);
+  const hSd = (currentDay - 1) * dpd + 0.3;
+  const hEd = currentDay * dpd - 0.3;
+  const hMid = (hSd + hEd) / 2;
+
+  // Glow behind all rings
+  gH.appendChild(svgEl('path', {
+    d: arcPath(hSd, hEd, PR_O + 6, AR_I - 4),
+    fill: cur.colorLight, opacity: '0.12', class: 'active-arc',
+  }));
+  // Bright phase ring slice
+  gH.appendChild(svgEl('path', {
+    d: arcPath(hSd, hEd, PR_O + 4, PR_I - 2),
+    fill: cur.colorLight, opacity: '0.95', class: 'active-arc',
+  }));
+  // Bright beginner slice
+  gH.appendChild(svgEl('path', {
+    d: arcPath(hSd, hEd, BR_O + 2, BR_I - 2),
+    fill: cur.begColor, opacity: '1',
+    filter: `drop-shadow(0 0 3px ${cur.colorLight})`,
+  }));
+  // Bright advanced slice
+  gH.appendChild(svgEl('path', {
+    d: arcPath(hSd, hEd, AR_O + 2, AR_I - 2),
+    fill: cur.advColor, opacity: '1',
+  }));
+  // White dot on phase ring
+  const dp = polarXY(hMid, (PR_O + PR_I) / 2);
+  gH.appendChild(svgEl('circle', { cx: dp.x, cy: dp.y, r: '4.5', fill: 'white', opacity: '0.95' }));
+}
+
+// ── UPDATE UI ─────────────────────────────────────────────────────────────────
+
+function updateUI(startDateStr) {
+  const start = new Date(startDateStr + 'T00:00:00');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.floor((today - start) / 86400000);
+  const cycleDay = ((diff % CYCLE) + CYCLE) % CYCLE + 1;
+  const phase = getPhase(cycleDay);
+
+  document.getElementById('day-num').textContent = cycleDay;
+  document.getElementById('phase-name').textContent = phase.name;
+  document.documentElement.style.setProperty('--accent', phase.colorLight);
+
+  const setCard = (id, color) => document.getElementById(id).style.setProperty('--card-accent', color);
+  setCard('card-phase', phase.color);
+  setCard('card-energy', phase.color);
+  setCard('card-fasting', phase.color);
+  setCard('card-nutrition', phase.color);
+
+  document.getElementById('info-phase').textContent = phase.name;
+  document.getElementById('info-phase-days').textContent = `Days ${phase.startDay}–${phase.endDay}`;
+  document.getElementById('info-energy').textContent = phase.energy;
+  document.getElementById('info-energy-sub').textContent = phase.energySub;
+  document.getElementById('info-fasting-title').textContent = phase.fastTitle;
+  document.getElementById('info-fasting-sub').textContent = phase.fastSub;
+  document.getElementById('info-nutrition').textContent = phase.nutrition;
+  document.getElementById('info-nutrition-sub').textContent = phase.nutritionSub;
+
+  const pillsEl = document.getElementById('fast-pills');
+  pillsEl.innerHTML = '';
+  phase.fastPills.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'fast-pill' + (p.rec ? ' recommended' : '');
+    d.style.setProperty('--card-accent', phase.color);
+    d.textContent = `${p.label} · ${p.note}`;
+    pillsEl.appendChild(d);
+  });
+
+  drawWheel(cycleDay);
+
+  const base = window.location.href.split('?')[0];
+  const url = base + '?start=' + startDateStr;
+  document.getElementById('url-display').textContent = url;
+  window._embedUrl = url;
+}
+
+function copyUrl() {
+  if (!window._embedUrl) return;
+  navigator.clipboard.writeText(window._embedUrl).then(() => {
+    const btn = document.querySelector('.url-row button');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1800);
+  });
+}
+
+// ── LEGEND ────────────────────────────────────────────────────────────────────
+
+function buildLegend() {
+  const lp = document.getElementById('legend-phases');
+  PHASES.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="legend-swatch" style="background:${p.color}"></div>${p.name}`;
+    lp.appendChild(item);
+  });
+
+  const lf = document.getElementById('legend-fast');
+  [
+    { label: '13–15 hrs (menstrual)', color: '#B8154E' },
+    { label: '15–17 hrs (follicular/ovulatory)', color: '#7B5DDE' },
+    { label: '17–72 hrs (follicular adv.)', color: '#163C88' },
+  ].forEach(f => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="legend-swatch" style="background:${f.color}"></div>${f.label}`;
+    lf.appendChild(item);
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+function init() {
+  buildLegend();
+  const params = new URLSearchParams(window.location.search);
+  let startDate = params.get('start') || '2026-03-28';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) startDate = '2026-03-28';
+  const input = document.getElementById('start-date');
+  input.value = startDate;
+  updateUI(startDate);
+  input.addEventListener('change', e => {
+    if (!e.target.value) return;
+    updateUI(e.target.value);
+    window.history.replaceState({}, '', window.location.href.split('?')[0] + '?start=' + e.target.value);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
