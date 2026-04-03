@@ -8,22 +8,17 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #07080F;
-    --text: #EEE8F5;
-    --muted: #7A7295;
-    --accent: #C084FC;
+    --bg: #ffffff;
+    --text: #1A1A2E;
+    --muted: #888099;
+    --accent: #9B20C0;
   }
   html, body { width: 100%; background: var(--bg); color: var(--text);
     font-family: 'Jost', sans-serif; font-weight: 300; overflow-x: hidden; }
   body {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; min-height: 100vh; padding: 24px 16px 36px;
-    background: radial-gradient(ellipse at 50% 0%, #160D2A 0%, #07080F 65%);
-  }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-    opacity: 0.5; pointer-events: none; z-index: 0;
+    background: #ffffff;
   }
   .container {
     position: relative; z-index: 1; display: flex; flex-direction: column;
@@ -40,7 +35,7 @@
 
   .wheel-wrap {
     position: relative; width: min(380px, 94vw); height: min(380px, 94vw);
-    filter: drop-shadow(0 0 50px rgba(120,70,200,0.15));
+    filter: drop-shadow(0 0 30px rgba(120,70,200,0.10));
   }
   #wheel-svg { width: 100%; height: 100%; overflow: visible; }
 
@@ -63,8 +58,9 @@
   /* Cards */
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; width: 100%; }
   .card {
-    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.055);
+    background: #ffffff; border: 1px solid #E8E4F0;
     border-radius: 12px; padding: 13px 15px; position: relative; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
   .card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -80,12 +76,12 @@
   .fast-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .fast-pill {
     font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 3px 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text); opacity: 0.65;
+    padding: 3px 8px; border-radius: 20px; border: 1px solid #DDD8EC;
+    color: var(--text); opacity: 0.75;
   }
   .fast-pill.recommended {
     opacity: 1; border-color: var(--card-accent, var(--accent));
-    color: var(--card-accent, var(--accent)); background: rgba(255,255,255,0.04);
+    color: var(--card-accent, var(--accent)); background: rgba(0,0,0,0.02);
   }
 
   /* Legend */
@@ -100,24 +96,26 @@
   /* Date input */
   .date-row {
     display: flex; align-items: center; gap: 10px; width: 100%;
-    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.065);
+    background: #ffffff; border: 1px solid #E8E4F0;
     border-radius: 10px; padding: 10px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   }
   .date-row label { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
     color: var(--muted); white-space: nowrap; }
   .date-row input[type="date"] {
     flex: 1; background: transparent; border: none; outline: none;
     color: var(--text); font-family: 'Jost', sans-serif; font-size: 0.78rem;
-    font-weight: 300; cursor: pointer; color-scheme: dark;
+    font-weight: 300; cursor: pointer; color-scheme: light;
   }
   .date-row input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.6) sepia(1) hue-rotate(230deg); cursor: pointer;
+    opacity: 0.5; cursor: pointer;
   }
 
   /* URL row */
   .url-row {
-    width: 100%; background: rgba(255,255,255,0.018);
-    border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 14px;
+    width: 100%; background: #ffffff;
+    border: 1px solid #E8E4F0; border-radius: 10px; padding: 10px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   }
   .url-label { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase;
     color: var(--muted); margin-bottom: 6px; }
@@ -125,16 +123,16 @@
   #url-display { flex: 1; font-size: 0.6rem; color: var(--muted);
     word-break: break-all; line-height: 1.45; }
   .url-row button {
-    background: rgba(140,80,220,0.18); border: 1px solid rgba(140,80,220,0.3);
-    color: #C084FC; border-radius: 6px; padding: 5px 10px; font-size: 0.58rem;
+    background: rgba(155,32,192,0.08); border: 1px solid rgba(155,32,192,0.25);
+    color: #9B20C0; border-radius: 6px; padding: 5px 10px; font-size: 0.58rem;
     letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; white-space: nowrap;
     font-family: 'Jost', sans-serif; transition: background 0.2s; flex-shrink: 0;
   }
-  .url-row button:hover { background: rgba(140,80,220,0.32); }
+  .url-row button:hover { background: rgba(155,32,192,0.15); }
 
   @keyframes pulseGlow {
-    0%, 100% { filter: drop-shadow(0 0 5px rgba(192,132,252,0.4)); }
-    50%       { filter: drop-shadow(0 0 16px rgba(192,132,252,0.9)); }
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(155,32,192,0.35)); }
+    50%       { filter: drop-shadow(0 0 12px rgba(155,32,192,0.7)); }
   }
   .active-arc { animation: pulseGlow 2.8s ease-in-out infinite; }
 
@@ -164,8 +162,8 @@
     <svg id="wheel-svg" viewBox="-190 -190 380 380" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <radialGradient id="bg" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#180D30" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="#07080F" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#F5F0FF" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
         </radialGradient>
       </defs>
       <circle cx="0" cy="0" r="182" fill="url(#bg)" opacity="0.7"/>
@@ -401,7 +399,7 @@ function drawWheel(currentDay) {
     // ── Phase name (outside)
     if (span > 16) {
       arcText(gL, phase.name.toUpperCase(), mid,
-        PR_O + 11, phase.colorLight, span > 45 ? '7' : '6.2', 1.8);
+        PR_O + 11, phase.color, span > 45 ? '7' : '6.2', 1.8);
     }
 
     // ── Fasting hour labels on the rings
@@ -410,24 +408,24 @@ function drawWheel(currentDay) {
     const small = span < 22;
 
     arcText(gL, phase.begLabel, mid, bMid,
-      'rgba(240,225,255,0.88)', small ? '5' : '6', 0.6);
+      'rgba(255,255,255,0.95)', small ? '5' : '6', 0.6);
     arcText(gL, phase.advLabel, mid, aMid,
-      'rgba(210,200,255,0.82)', small ? '4.8' : '5.8', 0.6);
+      'rgba(255,255,255,0.88)', small ? '4.8' : '5.8', 0.6);
   });
 
   // ── Ring divider circles
-  [[PR_I + 1.5, 0.07], [BR_I + 1.5, 0.06], [AR_I + 1.5, 0.05]].forEach(([r, op]) => {
+  [[PR_I + 1.5, 0.15], [BR_I + 1.5, 0.12], [AR_I + 1.5, 0.10]].forEach(([r, op]) => {
     gM.appendChild(svgEl('circle', {
       cx: 0, cy: 0, r,
-      fill: 'none', stroke: `rgba(200,180,255,${op})`, 'stroke-width': '0.6',
+      fill: 'none', stroke: `rgba(100,80,160,${op})`, 'stroke-width': '0.6',
     }));
   });
 
   // ── Small ring key labels (reading from inside the rings at top)
   [
-    { r: PR_I - 9,  text: 'PHASE',    col: 'rgba(210,190,240,0.3)' },
-    { r: BR_I - 8,  text: 'BEGINNER', col: 'rgba(190,170,230,0.28)' },
-    { r: AR_I - 8,  text: 'ADVANCED', col: 'rgba(170,155,215,0.26)' },
+    { r: PR_I - 9,  text: 'PHASE',    col: 'rgba(80,60,130,0.28)' },
+    { r: BR_I - 8,  text: 'BEGINNER', col: 'rgba(80,60,130,0.25)' },
+    { r: AR_I - 8,  text: 'ADVANCED', col: 'rgba(80,60,130,0.22)' },
   ].forEach(({ r, text, col }) => {
     const t = svgEl('text', {
       x: 0, y: -r, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
@@ -444,14 +442,14 @@ function drawWheel(currentDay) {
     const p1 = polarXY(deg, TICK_O), p2 = polarXY(deg, TICK_I - (major ? 3 : 0));
     gM.appendChild(svgEl('line', {
       x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
-      stroke: `rgba(220,205,245,${major ? 0.28 : 0.12})`,
+      stroke: `rgba(60,50,100,${major ? 0.25 : 0.12})`,
       'stroke-width': major ? '1' : '0.5',
     }));
     if (major) {
       const lp = polarXY(deg, NUM_R);
       const t = svgEl('text', {
         x: lp.x, y: lp.y, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
-        fill: 'rgba(155,140,185,0.5)', 'font-size': '5.8', 'font-family': "'Jost', sans-serif",
+        fill: 'rgba(80,65,120,0.5)', 'font-size': '5.8', 'font-family': "'Jost', sans-serif",
       });
       t.textContent = d;
       gM.appendChild(t);
